@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#e9e9e7" />
+<title>DAYFRAME v5 — オンライン時計</title>
+<style>
+  :root { --ink:#262626; --muted:#777; --line:#b8b8b8; --paper:#ededeb; --soft:#d9d9d7; --accent:#353535; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8d7d4; color:var(--ink); font-family:"Helvetica Neue", "Hiragino Kaku Gothic ProN", "Yu Gothic", Arial, sans-serif; }
+  button,input,select {font:inherit;}
+  button {cursor:pointer;}
+  .shell {min-height:100vh; display:grid; place-items:center; padding:28px; }
+  .frame {width:min(1380px,100%); min-height:750px; border:2px solid #444; background:var(--paper); box-shadow:0 16px 55px #0002; padding:27px 30px 26px; position:relative;}
+  .toolbar {display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:22px;}
+  .brand {font-size:11px; letter-spacing:.27em; font-weight:600; color:#656565;}
+  .controls {display:flex;align-items:center; gap:7px; flex-wrap:wrap;}
+  .controls button,.controls select {border:1px solid #aaa; background:transparent; color:var(--ink); border-radius:2px; padding:7px 10px; font-size:12px;}
+  .controls button:hover {background:#d8d8d8;}
+  .grid {display:grid;grid-template-columns:minmax(0,2.05fr) minmax(272px, .87fr); gap:28px;}
+  .clock-area {min-width:0;}
+  .time {font-family:"Helvetica Neue", "Arial Narrow", Arial,sans-serif; font-weight:100; font-size:200px; letter-spacing:-.02em; line-height:1; white-space:nowrap; font-variant-numeric:tabular-nums; text-align:center;}
+  .time {transform-origin:center center;}
+  .time .separator {font-size:.31em; vertical-align:.22em; letter-spacing:-.03em; margin:0 .03em 0 .08em; opacity:.45;}
+  .date {margin:21px 0 25px; text-align:center; font-size:clamp(15px,1.65vw,23px); font-weight:300; letter-spacing:-.015em;}
+  .under {display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,.84fr); gap:18px;}
+  .panel-label {text-transform:uppercase; letter-spacing:.22em; color:#666; font-size:10px; font-weight:700; border-bottom:1px solid #aaa; padding-bottom:7px; margin:0 0 10px;}
+  .schedule-head {display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .add {border:0;background:#333;color:#fff;padding:6px 11px;font-size:12px;border-radius:2px;}
+  .schedule {min-height:320px;}
+  .event-list {display:flex;flex-direction:column;gap:4px;}
+  .event {width:100%;display:flex;gap:9px;align-items:center;text-align:left;border:0;background:#d3d3d1;color:#242424;min-height:36px;padding:7px 9px;}
+  .event:nth-child(even) {background:#c7c7c5;}
+  .event:hover {filter:brightness(.95);}
+  .event-time {width:62px;flex-shrink:0;font-size:11px;font-variant-numeric:tabular-nums; color:#555;}
+  .event-title {font-size:12px;line-height:1.4;overflow-wrap:anywhere;}
+  .day-group {font-size:10px;letter-spacing:.08em;color:#777;margin:11px 0 5px;}
+  .empty {font-size:13px;color:#888;padding:26px 12px;background:#e2e2e0;line-height:1.9;}
+  .weather-main {display:flex; align-items:center; justify-content:center;gap:5px; margin:7px 0 12px;}
+  .weather-symbol {display:flex;align-items:center;justify-content:center;width:64px;height:64px;flex-shrink:0;}
+  .weather-symbol img {width:58px;height:58px;object-fit:contain;}
+  .weather-symbol .icon-fallback {font-size:24px;color:var(--muted);}
+  .temp {font-size:clamp(47px,6vw,81px);font-weight:200;letter-spacing:-.07em;line-height:1;font-variant-numeric:tabular-nums;}
+  .temp-unit {font-size:23px;align-self:start;margin-top:4px;}
+  .weather-note {color:#666;font-size:12px;text-align:center;min-height:36px;line-height:1.5;}
+  .forecast {display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px;}
+  .forecast-day {border-top:2px solid #777;padding-top:7px;text-align:center;}
+  .forecast-day .d {font-size:11px;font-weight:700;letter-spacing:.07em;}
+  .forecast-day .sym {display:flex;align-items:center;justify-content:center;height:38px;margin:7px 0;}
+  .forecast-day .sym img {width:36px;height:36px;object-fit:contain;}
+  .forecast-day .temps {font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .weather-foot {margin-top:12px;color:#858585;font-size:10px;line-height:1.4;}
+  .calendars {display:flex;flex-direction:column;gap:18px;border-left:1px solid #b9b9b9;padding-left:27px;}
+  .calendar-month {width:100%;}
+  .month-title {font-family:"Helvetica Neue", Arial,sans-serif;font-size:19px;font-weight:300;letter-spacing:.025em;margin-bottom:10px;}
+  .mini-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px 3px;text-align:center;}
+  .weekday {font-size:10px;letter-spacing:.04em;color:#777;margin-bottom:3px;}
+  .day {min-height:22px;display:grid;place-items:center;font-size:12px;font-variant-numeric:tabular-nums;border-radius:1px;}
+  /* 祝日は数字の下の小さな点だけで示す。今日の強調とも両立。 */
+  .day.holiday {position:relative;cursor:help;}
+  .day.holiday::after {content:"";position:absolute;bottom:0px;left:50%;transform:translateX(-50%);width:3.5px;height:3.5px;background:currentColor;border-radius:50%;}
+  .day.holiday:not(.today)::after {background:#484848;}
+  .day.holiday:focus-visible {outline:1px solid currentColor;outline-offset:1px;}
+  .holiday-tooltip {position:fixed;z-index:30;background:#262626;color:#fff;border-radius:3px;padding:7px 10px;font-size:12px;line-height:1.4;box-shadow:0 6px 18px #0003;pointer-events:none;max-width:180px;white-space:nowrap;}
+  .holiday-tooltip[hidden] {display:none;}
+  .day.other {color:#b6b6b6;}
+  .day.today {background:#303030;color:#fff;font-weight:600;}
+  .day.has-event:not(.today) {text-decoration:underline;text-underline-offset:3px;}
+  dialog {border:1px solid #888;background:#f4f4f2;color:#333;min-width:min(380px,calc(100vw - 30px));padding:22px;box-shadow:0 20px 60px #0004;}
+  dialog::backdrop{background:#0006;}
+  dialog h2 {font-size:18px;font-weight:500;margin:0 0 16px;}
+  dialog label {display:grid;gap:5px;font-size:12px;color:#555;margin-bottom:12px;}
+  dialog input {height:38px;border:1px solid #aaa;background:white;padding:6px 9px;color:#222;}
+  .actions {display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px;}
+  .actions button {padding:8px 12px;border:1px solid #999;background:#eee;color:#222;}
+  .actions .primary {background:#333;color:#fff;border-color:#333;}
+  .actions .danger {color:#9b3737;margin-right:auto;}
+  body.dark {--ink:#e5e5e5;--muted:#aaa;--line:#5f5f5f;--paper:#252525;--soft:#3b3b3b;background:#171717;}
+  body.dark .brand,body.dark .panel-label,body.dark .weekday,body.dark .weather-note,body.dark .weather-foot,body.dark .footer,body.dark .day-group {color:#b6b6b6;}
+  body.dark .controls button, body.dark .controls select {color:#eee;border-color:#777;background:#292929;}
+  body.dark .event {background:#414141;color:#eee;}body.dark .event:nth-child(even){background:#383838;}body.dark .event-time{color:#ccc;}
+  body.dark .empty {background:#363636;color:#bbb;}body.dark .day.today {background:#ededed;color:#252525;}
+  body.dark .day.other{color:#777;}body.dark .weather-symbol img,body.dark .forecast-day .sym img{filter:invert(1);}
+  body.dark .day.holiday:not(.today)::after{background:#ddd;}
+  body.dark .frame {border-color:#7f7f7f;}
+  @media (max-width:970px) { .frame{min-height:0;padding:20px;} .grid{grid-template-columns:1fr;} .time{font-size:clamp(63px,12vw,134px);} .calendars{border-left:0;border-top:1px solid #aaa;padding-left:0;padding-top:19px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;} .month-title{font-size:16px;} }
+  @media (max-width:570px) {.shell{padding:8px;}.frame{padding:14px;}.time{font-size:clamp(42px,11vw,72px);}.date{font-size:14px;margin-top:11px;}.under{grid-template-columns:1fr;}.schedule{min-height:0;}.calendars{grid-template-columns:1fr;}.mini-grid{max-width:390px;}.day{min-height:25px;} .month-title{margin-top:4px;}.toolbar{margin-bottom:16px;} }
+  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;}}
+  @media print{body{background:white}.shell{padding:0}.frame{width:100%;box-shadow:none;border:0}.controls{display:none}}
+</style>
+</head>
+<body>
+<main class="shell"><section class="frame" aria-label="オンライン時計">
+  <header class="toolbar"><div class="brand">DAYFRAME / LIVE DESK CLOCK</div><div class="controls">
+    <label for="city" style="font-size:11px;color:var(--muted)">天気</label>
+    <select id="city" aria-label="天気の地域"><option value="hiratsuka">平塚</option><option value="yokohama">横浜</option><option value="tokyo">東京</option><option value="osaka">大阪</option><option value="sapporo">札幌</option><option value="fukuoka">福岡</option></select>
+    <button id="mode" title="背景色切替">◐ 配色</button><button id="hours" title="12時間/24時間切替">24H</button><button id="fullscreen" title="全画面表示">⛶ 全画面</button>
+  </div></header>
+  <div class="grid">
+    <section class="clock-area">
+      <div class="time" id="clock" aria-live="off">----</div>
+      <div class="date" id="date">現在時刻を読み込んでいます</div>
+      <div class="under">
+        <section class="schedule"><div class="schedule-head"><div class="panel-label">UPCOMING / 予定</div><button class="add" id="add">＋ 予定</button></div><div id="event-list" class="event-list"></div></section>
+        <section class="weather"><div class="panel-label">WEATHER / 天気</div><div class="weather-main"><span class="weather-symbol" id="weather-symbol"><span class="icon-fallback">—</span></span><span class="temp" id="temp">--</span><span class="temp-unit">°C</span></div><div class="weather-note" id="weather-note">天気情報を取得しています…</div><div class="forecast" id="forecast"></div><div class="weather-foot" id="weather-foot">天気: Open-Meteo（オンライン時のみ）</div></section>
+      </div>
+    </section>
+    <aside class="calendars" id="calendars" aria-label="3か月のカレンダー"></aside>
+  </div>
+</section></main>
+<div id="holiday-tooltip" class="holiday-tooltip" role="status" hidden></div>
+<dialog id="event-dialog"><form id="event-form"><h2 id="event-heading">予定を追加</h2><label>タイトル<input id="ev-title" required maxlength="80" placeholder="例：ランチ、打ち合わせ" /></label><label>日付<input id="ev-date" type="date" required /></label><label>時刻<input id="ev-time" type="time" required /></label><div class="actions"><button type="button" class="danger" id="ev-delete" hidden>削除</button><button type="button" id="ev-cancel">キャンセル</button><button type="submit" class="primary">保存</button></div></form></dialog>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const LOCATIONS = {hiratsuka:{name:'平塚',lat:35.327,lon:139.35},yokohama:{name:'横浜',lat:35.444,lon:139.638},tokyo:{name:'東京',lat:35.676,lon:139.650},osaka:{name:'大阪',lat:34.694,lon:135.502},sapporo:{name:'札幌',lat:43.061,lon:141.354},fukuoka:{name:'福岡',lat:33.59,lon:130.402}};
+  const jpWeek=['日','月','火','水','木','金','土'];
+  const enWeek=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const enMonths=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const safeStorage=(key,fallback) => {try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;}};
+  const save=(key,value)=> {try{localStorage.setItem(key,JSON.stringify(value));}catch{}};
+  let events = safeStorage('dayframe-events-v1',[]);
+  if(!Array.isArray(events)) events=[];
+  let chosenCity=safeStorage('dayframe-city-v1','hiratsuka'); if(!LOCATIONS[chosenCity])chosenCity='hiratsuka';
+  $('city').value=chosenCity;
+  let is12=safeStorage('dayframe-12h-v1',false);
+  let dark=safeStorage('dayframe-dark-v1',false);
+  document.body.classList.toggle('dark',dark); $('hours').textContent=is12?'12H':'24H';
+  let lastDay='';
+  function fitClock(){
+    const el=$('clock');
+    el.style.transform='none';
+    const available=el.clientWidth;
+    const required=el.scrollWidth;
+    if(required>available && available>0) el.style.transform=`scaleX(${(available/required).toFixed(4)})`;
+  }
+  window.addEventListener('resize',fitClock);
+  function updateClock(){
+    const now=new Date();
+    const h=is12?(now.getHours()%12||12):now.getHours();
+    $('clock').textContent=`${String(h).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    fitClock();
+    $('date').textContent=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}（${jpWeek[now.getDay()]}）`;
+    if(lastDay!==fmtDate(now)){lastDay=fmtDate(now);renderCalendars();renderEvents();fetchWeather();}
+  }
+  // 日本の祝日（2000〜2099年の通常の祝日規則を対象）。
+  // 春分・秋分は天文計算による近似。将来の正式な祝日公表値と異なる可能性があります。
+  // 2020/2021年の五輪特例移動も反映。
+  const holidayCache=new Map();
+  function japaneseHolidays(year){
+    if(holidayCache.has(year)) return holidayCache.get(year);
+    const h=new Map();
+    const add=(m,d,name)=>{if(d)h.set(fmtDate(new Date(year,m-1,d)),name);};
+    const nthMonday=(m,n)=>{const first=new Date(year,m-1,1).getDay();return 1+(8-first)%7+(n-1)*7;};
+    if(year<2000||year>2099){holidayCache.set(year,h);return h;}
+    add(1,1,'元日');add(1,nthMonday(1,2),'成人の日');
+    add(2,11,'建国記念の日');if(year>=2020)add(2,23,'天皇誕生日');
+    const vernal=Math.floor(20.8431+0.242194*(year-1980)-Math.floor((year-1980)/4));
+    const autumn=Math.floor(23.2488+0.242194*(year-1980)-Math.floor((year-1980)/4));
+    add(3,vernal,'春分の日');add(4,29,'昭和の日');add(5,3,'憲法記念日');add(5,4,'みどりの日');add(5,5,'こどもの日');
+    add(7,year===2020?23:year===2021?22:nthMonday(7,3),'海の日');
+    add(8,year===2020?10:year===2021?8:11,'山の日');
+    add(9,nthMonday(9,3),'敬老の日');add(9,autumn,'秋分の日');
+    if(year!==2020&&year!==2021)add(10,nthMonday(10,2),'スポーツの日');
+    add(11,3,'文化の日');add(11,23,'勤労感謝の日');
+    if(year===2020){h.delete(`${year}-07-20`);h.delete(`${year}-10-12`);h.delete(`${year}-08-11`);add(7,24,'スポーツの日');}
+    if(year===2021){h.delete(`${year}-07-19`);h.delete(`${year}-10-11`);h.delete(`${year}-08-11`);add(7,23,'スポーツの日');}
+    // 日曜の祝日を振り替える（月曜日が別の祝日なら次の平日へ）。
+    const original=[...h.keys()].sort();
+    for(const date of original){const d=new Date(date+'T12:00:00');if(d.getDay()!==0)continue;
+      const next=new Date(d);do{next.setDate(next.getDate()+1);}while(h.has(fmtDate(next)));
+      h.set(fmtDate(next),'振替休日');
+    }
+    // 2つの国民の祝日に挟まれた平日は「国民の休日」。
+    for(let m=1;m<=12;m++)for(let day=1;day<=31;day++){
+      const d=new Date(year,m-1,day);if(d.getMonth()!==m-1)break;
+      const k=fmtDate(d);if(h.has(k)||d.getDay()===0)continue;
+      const prev=new Date(year,m-1,day-1),next=new Date(year,m-1,day+1);
+      if(h.has(fmtDate(prev))&&h.has(fmtDate(next)))h.set(k,'国民の休日');
+    }
+    holidayCache.set(year,h);return h;
+  }
+  function showHolidayTooltip(el){
+    const tip=$('holiday-tooltip'),name=el.dataset.holiday;
+    if(!name)return;tip.textContent=name;tip.hidden=false;
+    const r=el.getBoundingClientRect(),width=tip.offsetWidth,height=tip.offsetHeight;
+    tip.style.left=`${Math.max(8,Math.min(window.innerWidth-width-8,r.left+r.width/2-width/2))}px`;
+    tip.style.top=`${r.top>height+10?r.top-height-6:r.bottom+6}px`;
+  }
+  function hideHolidayTooltip(){$('holiday-tooltip').hidden=true;}
+  $('calendars').addEventListener('pointerover',e=>{const el=e.target.closest('.holiday');if(el)showHolidayTooltip(el);});
+  $('calendars').addEventListener('pointerout',e=>{if(!e.relatedTarget?.closest?.('.holiday'))hideHolidayTooltip();});
+  $('calendars').addEventListener('focusin',e=>{const el=e.target.closest('.holiday');if(el)showHolidayTooltip(el);});
+  $('calendars').addEventListener('focusout',hideHolidayTooltip);
+  $('calendars').addEventListener('click',e=>{const el=e.target.closest('.holiday');if(el)showHolidayTooltip(el);});
+  document.addEventListener('pointerdown',e=>{if(!e.target.closest('.holiday'))hideHolidayTooltip();});
+  $('calendars').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('holiday')){e.preventDefault();showHolidayTooltip(e.target);}});
+  function renderCalendars(){
+    const now=new Date(); const used=new Set(events.map(e=>e.date)); let html='';
+    for(let offset=0;offset<3;offset++){
+      const first=new Date(now.getFullYear(),now.getMonth()+offset,1);
+      const year=first.getFullYear(), month=first.getMonth();
+      const start=first.getDay(), length=new Date(year,month+1,0).getDate();
+      const holidays=japaneseHolidays(year);
+      let days='';
+      for(const wd of jpWeek) days+=`<div class="weekday">${wd}</div>`;
+      for(let k=0;k<Math.ceil((start+length)/7)*7;k++){
+        const n=k-start+1; if(n<1||n>length){days+='<div class="day other"></div>';continue;}
+        const key=fmtDate(new Date(year,month,n));
+        const today=key===fmtDate(now),holiday=holidays.get(key);
+        days+=holiday
+          ? `<div tabindex="0" role="button" class="day holiday ${today?'today':''} ${used.has(key)?'has-event':''}" data-holiday="${esc(holiday)}" title="${esc(holiday)}" aria-label="${month+1}月${n}日 ${esc(holiday)}" ${today?'aria-current="date"':''}>${n}</div>`
+          : `<div class="day ${today?'today':''} ${used.has(key)?'has-event':''}" ${today?'aria-current="date"':''}>${n}</div>`;
+      }
+      html+=`<div class="calendar-month"><div class="month-title">${enMonths[month]} ${year}</div><div class="mini-grid">${days}</div></div>`;
+    }
+    $('calendars').innerHTML=html;
+  }
+  function esc(str){return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function renderEvents(){
+    const now=new Date();const today=fmtDate(now);
+    const future=events.filter(e=>e.date>=today).sort((a,b)=>(a.date+'T'+a.time).localeCompare(b.date+'T'+b.time)).slice(0,10);
+    if(!future.length){$('event-list').innerHTML='<div class="empty">予定はまだありません。<br>「＋ 予定」から追加できます。</div>';return;}
+    let last='',html='';
+    for(const e of future){if(e.date!==last){last=e.date;const d=new Date(e.date+'T12:00:00');const dayText= e.date===today?'TODAY / 今日':`${d.getMonth()+1}/${d.getDate()} (${jpWeek[d.getDay()]})`;html+=`<div class="day-group">${dayText}</div>`;}
+      html+=`<button class="event" data-id="${esc(e.id)}" aria-label="${esc(e.title)}を編集"><span class="event-time">${esc(e.time)}</span><span class="event-title">${esc(e.title)}</span></button>`;
+    }
+    $('event-list').innerHTML=html;
+  }
+  let editing=null;
+  function openEvent(id=null){editing=id; const e=events.find(x=>x.id===id);$('event-heading').textContent=e?'予定を編集':'予定を追加';$('ev-title').value=e?.title??'';$('ev-date').value=e?.date??fmtDate(new Date());$('ev-time').value=e?.time??'10:00';$('ev-delete').hidden=!e;$('event-dialog').showModal();$('ev-title').focus();}
+  $('add').addEventListener('click',()=>openEvent());
+  $('event-list').addEventListener('click',e=>{const btn=e.target.closest('[data-id]');if(btn)openEvent(btn.dataset.id);});
+  $('ev-cancel').addEventListener('click',()=>$('event-dialog').close());
+  $('ev-delete').addEventListener('click',()=>{if(editing && confirm('この予定を削除しますか？')){events=events.filter(e=>e.id!==editing);save('dayframe-events-v1',events);$('event-dialog').close();renderEvents();renderCalendars();}});
+  $('event-form').addEventListener('submit',e=>{e.preventDefault();const item={id:editing??(typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()),title:$('ev-title').value.trim(),date:$('ev-date').value,time:$('ev-time').value};if(!item.title)return;if(editing)events=events.map(x=>x.id===editing?item:x);else events.push(item);save('dayframe-events-v1',events);$('event-dialog').close();renderEvents();renderCalendars();});
+  $('hours').addEventListener('click',()=>{is12=!is12;save('dayframe-12h-v1',is12);$('hours').textContent=is12?'12H':'24H';updateClock();});
+  $('mode').addEventListener('click',()=>{dark=!dark;save('dayframe-dark-v1',dark);document.body.classList.toggle('dark',dark);});
+  $('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch(e){alert('このブラウザでは全画面表示を使用できません。');}});
+  // 天気アイコンはHTMLと同階層の asset/ フォルダに配置してください。
+  // 必要な10種類のSVG：
+  // clear-day, clear-night, partly-cloudy-day, partly-cloudy-night,
+  // cloudy, rain, heavy-rain, thunderstorm, snow, fog
+  const weatherIcon = (code, isDay=true) => {
+    if (code===0) return [isDay?'clear-day':'clear-night','快晴'];
+    if ([1,2].includes(code)) return [isDay?'partly-cloudy-day':'partly-cloudy-night','晴れ時々曇り'];
+    if (code===3) return ['cloudy','曇り'];
+    if ([45,48].includes(code)) return ['fog','霧'];
+    if ([51,53,55,56,57].includes(code)) return ['rain','霧雨'];
+    if ([61,63,66,80,81].includes(code)) return ['rain','雨'];
+    if ([65,67,82].includes(code)) return ['heavy-rain','強い雨'];
+    if ([71,73,75,77,85,86].includes(code)) return ['snow','雪'];
+    if ([95,96,99].includes(code)) return ['thunderstorm','雷雨'];
+    return ['cloudy','天気'];
+  };
+  function svgIcon(name, label) {
+    const img=document.createElement('img');
+    img.src=`asset/${name}.svg`;
+    img.alt=label;
+    img.loading='eager';
+    img.addEventListener('error',()=>{const placeholder=document.createElement('span');placeholder.className='icon-fallback';placeholder.textContent='—';img.replaceWith(placeholder);});
+    return img;
+  }
+  let fetchToken=0;
+  async function fetchWeather(){
+    const token=++fetchToken, place=LOCATIONS[chosenCity];
+    $('weather-note').textContent=`${place.name}の天気を取得中…`;
+    const q=new URLSearchParams({latitude:place.lat,longitude:place.lon,current:'temperature_2m,weather_code,is_day',daily:'weather_code,temperature_2m_max,temperature_2m_min',timezone:'Asia/Tokyo',forecast_days:'4'});
+    try{
+      const controller=new AbortController();const id=setTimeout(()=>controller.abort(),9000);
+      let r;try{r=await fetch(`https://api.open-meteo.com/v1/forecast?${q}`,{signal:controller.signal});}finally{clearTimeout(id);}
+      if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();if(token!==fetchToken)return;
+      const [iconName,description]=weatherIcon(data.current.weather_code,Boolean(data.current.is_day));$('weather-symbol').replaceChildren(svgIcon(iconName,description));
+      $('temp').textContent=String(Math.round(data.current.temperature_2m));$('weather-note').textContent=`${place.name} • ${description}`;
+      const days=data.daily;let html='';
+      for(let i=1;i<Math.min(4,days.time.length);i++){
+        const [symbol,description]=weatherIcon(days.weather_code[i],true);const d=new Date(days.time[i]+'T12:00:00');
+        html+=`<div class="forecast-day"><div class="d">${jpWeek[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</div><div class="sym"><img src="asset/${symbol}.svg" alt="${description}" onerror="this.hidden=true" /></div><div class="temps">${Math.round(days.temperature_2m_max[i])}° / ${Math.round(days.temperature_2m_min[i])}°</div></div>`;
+      }
+      $('forecast').innerHTML=html;$('weather-foot').textContent='天気データ: Open-Meteo / 日本時間で更新・参考値';
+    }catch(e){if(token!==fetchToken)return;$('weather-symbol').textContent='—';$('temp').textContent='--';$('weather-note').textContent='天気を取得できませんでした（時計は動作中）';$('forecast').innerHTML='';$('weather-foot').textContent='天気の表示にはインターネット接続が必要です。';}
+  }
+  $('city').addEventListener('change',e=>{chosenCity=e.target.value;save('dayframe-city-v1',chosenCity);fetchWeather();});
+  updateClock();setInterval(updateClock,1000);setInterval(fetchWeather,15*60*1000);
+})();
+</script>
+</body></html>
