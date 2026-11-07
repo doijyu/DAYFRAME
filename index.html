@@ -165,7 +165,7 @@
 <main class="shell"><section class="frame" aria-label="オンライン時計">
   <header class="toolbar"><div class="brand">DAYFRAME / LIVE DESK CLOCK</div><div class="controls">
     <label for="city" style="font-size:11px;color:var(--muted)">天気</label>
-    <select id="city" aria-label="天気の地域"><option value="hiratsuka">平塚</option><option value="yokohama">横浜</option><option value="tokyo">東京</option><option value="osaka">大阪</option><option value="sapporo">札幌</option><option value="fukuoka">福岡</option></select>
+    <select id="city" aria-label="天気の地域"><option value="hiratsuka">平塚</option><option value="yokohama">横浜</option><option value="tokyo">東京</option><option value="osaka">大阪</option><option value="sapporo">札幌</option><option value="fukuoka">福岡</option><option value="kitakyushu">北九州</option></select>
     <button id="mode" title="配色の切替：自動／昼／夜" aria-label="配色モード切替">◐ 自動</button><button id="hours" title="12時間/24時間切替">24H</button><button id="fullscreen" title="全画面表示">⛶ 全画面</button>
   </div></header>
   <div class="grid">
@@ -186,7 +186,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const LOCATIONS = {hiratsuka:{name:'平塚',lat:35.327,lon:139.35},yokohama:{name:'横浜',lat:35.444,lon:139.638},tokyo:{name:'東京',lat:35.676,lon:139.650},osaka:{name:'大阪',lat:34.694,lon:135.502},sapporo:{name:'札幌',lat:43.061,lon:141.354},fukuoka:{name:'福岡',lat:33.59,lon:130.402}};
+  const LOCATIONS = {hiratsuka:{name:'平塚',lat:35.327,lon:139.35},yokohama:{name:'横浜',lat:35.444,lon:139.638},tokyo:{name:'東京',lat:35.676,lon:139.650},osaka:{name:'大阪',lat:34.694,lon:135.502},sapporo:{name:'札幌',lat:43.061,lon:141.354},fukuoka:{name:'福岡',lat:33.59,lon:130.402},kitakyushu:{name:'北九州',lat:33.8835,lon:130.8752}};
   const jpWeek=['日','月','火','水','木','金','土'];
   const enWeek=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const enMonths=['January','February','March','April','May','June','July','August','September','October','November','December'];
