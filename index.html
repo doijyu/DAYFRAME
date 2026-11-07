@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="theme-color" content="#e9e9e7" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="DAYFRAME" />
 <meta name="mobile-web-app-capable" content="yes" />
-<title>DAYFRAME v6 — オンライン時計</title>
+<meta name="theme-color" content="#e9e9e7" id="theme-color" />
+<title>DAYFRAME v7 — オンライン時計</title>
 <style>
   :root { --ink:#262626; --muted:#777; --line:#b8b8b8; --paper:#ededeb; --soft:#d9d9d7; --accent:#353535; }
   * { box-sizing:border-box; }
@@ -88,32 +88,75 @@
   body.dark .day.other{color:#777;}body.dark .weather-symbol img,body.dark .forecast-day .sym img{filter:invert(1);}
   body.dark .day.holiday:not(.today)::after{background:#ddd;}
   body.dark .frame {border-color:#7f7f7f;}
+  /* A案：夜間アンビエントモード。基本レイアウトには触れず色だけを柔らかくする。 */
+  body, .frame, .toolbar, .calendars, .controls button, .controls select,
+  .event, .empty, .day.today, .forecast-day, .panel-label {
+    transition: background-color 2.2s ease, color 2.2s ease, border-color 2.2s ease, box-shadow 2.2s ease;
+  }
+  body.ambient { --ink:#e9c29a; --muted:#a18c77; --line:#40362f; --paper:#191716;
+    --soft:#302923; background:#100f0e; color:var(--ink); }
+  body.ambient .frame {border-color:#504239;box-shadow:0 12px 38px #0003;}
+  body.ambient .brand,body.ambient .panel-label,body.ambient .weekday,
+  body.ambient .weather-note,body.ambient .weather-foot,body.ambient .day-group {color:#9d8773;}
+  body.ambient .time {color:#e6b486; text-shadow:0 0 22px #db9e5830;}
+  body.ambient .date {color:#bea187;}
+  body.ambient .controls button,body.ambient .controls select {background:#211d1a; border-color:#51453b;color:#d0b394;}
+  body.ambient .controls button:hover {background:#342b24;}
+  body.ambient .toolbar, body.ambient .calendars {border-color:#4b3d32;}
+  body.ambient .panel-label,body.ambient .forecast-day {border-color:#544333;}
+  body.ambient .event {background:#29231f;color:#dfc7b0;}
+  body.ambient .event:nth-child(even){background:#312720;}
+  body.ambient .event-time {color:#aa8e75;}
+  body.ambient .empty {background:#24201d;color:#9f8c7d;}
+  body.ambient .day.today {background:#a47d58;color:#191512;}
+  body.ambient .day.other {color:#60564e;}
+  body.ambient .day.holiday:not(.today)::after {background:#bd9e7c;}
+  body.ambient .weather-symbol img,body.ambient .forecast-day .sym img {filter:sepia(.45) saturate(.8) brightness(.78);}
+  body.ambient .holiday-tooltip {background:#392d23;color:#eed1b5;}
+  @media (prefers-reduced-motion: reduce) {
+    body, .frame, .toolbar, .calendars, .controls button, .controls select,
+    .event, .empty, .day.today, .forecast-day, .panel-label {transition:none;}
+  }
   @media (max-width:970px) { .frame{min-height:0;padding:20px;} .grid{grid-template-columns:1fr;} .time{font-size:clamp(63px,12vw,134px);} .calendars{border-left:0;border-top:1px solid #aaa;padding-left:0;padding-top:19px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;} .month-title{font-size:16px;} }
   @media (max-width:570px) {.shell{padding:8px;}.frame{padding:14px;}.time{font-size:clamp(42px,11vw,72px);}.date{font-size:14px;margin-top:11px;}.under{grid-template-columns:1fr;}.schedule{min-height:0;}.calendars{grid-template-columns:1fr;}.mini-grid{max-width:390px;}.day{min-height:25px;} .month-title{margin-top:4px;}.toolbar{margin-bottom:16px;} }
-  /* iPad横向き専用：縦向きのデザインは変更しない */
+  /* iPad 横向き専用: 縦向きのスタイルは一切変更しない。 */
   @media (orientation:landscape) and (min-width:971px) and (max-height:950px) {
-    .shell {padding:8px; min-height:100dvh; display:block;}
-    .frame {width:100%; min-height:0; height:auto; min-height:calc(100dvh - 16px); padding:18px 24px 16px; box-shadow:none;}
-    .toolbar {padding-bottom:11px; margin-bottom:16px;}
-    .grid {grid-template-columns:minmax(0,1.92fr) minmax(240px,.92fr); gap:22px;}
-    .clock-area {min-width:0;}
-    .time {font-size:clamp(80px,11.2vw,154px); letter-spacing:0; text-align:left; padding-left:8px; padding-right:18px; transform-origin:left center;}
-    .time .separator {margin:0 .02em 0 .06em;}
-    .date {margin:10px 0 18px; font-size:clamp(15px,1.5vw,20px);}
-    .under {gap:15px; grid-template-columns:minmax(0,1.05fr) minmax(175px,.9fr);}
+    .shell {min-height:100svh; padding:10px 12px; display:block;}
+    .frame {width:100%; min-height:0; height:auto; padding:15px 24px 14px; box-shadow:none;}
+    .toolbar {padding-bottom:10px; margin-bottom:12px;}
+    .grid {grid-template-columns:minmax(0,1.75fr) minmax(280px,.93fr); gap:23px;}
+    .clock-area {overflow:hidden;}
+    .time {font-size:clamp(96px,12.3vw,164px); text-align:left; transform-origin:left center; letter-spacing:0.005em;}
+    .date {margin:10px 0 17px; font-size:clamp(15px,1.5vw,20px);}
+    .under {grid-template-columns:minmax(0,1fr) minmax(176px,.88fr); gap:14px;}
     .schedule {min-height:0;}
-    .calendars {gap:12px; padding-left:21px;}
-    .month-title {font-size:18px; margin-bottom:7px;}
-    .mini-grid {gap:2px 3px;}
-    .day {min-height:20px;}
-    .weather-main {margin:4px 0 8px;}
-    .weather-symbol {width:50px;height:50px;}
-    .weather-symbol img {width:47px;height:47px;}
-    .temp {font-size:clamp(43px,5.3vw,68px);}
+    .empty {padding:14px 10px;}
+    .weather-main {margin:2px 0 5px;}
+    .weather-symbol {height:48px;width:48px;}
+    .weather-symbol img {height:45px;width:45px;}
+    .temp {font-size:clamp(44px,5.2vw,67px);}
+    .weather-note {min-height:24px;}
     .forecast {margin-top:8px;}
+    .forecast-day .sym {height:30px;margin:3px 0;}
+    .forecast-day .sym img {width:29px;height:29px;}
     .weather-foot {margin-top:7px;}
+    .calendars {gap:10px; padding-left:19px;}
+    .month-title {font-size:17px; margin-bottom:6px;}
+    .mini-grid {gap:2px 3px;}
+    .day {min-height:19px;font-size:11px;}
+    .weekday {font-size:9px; margin-bottom:1px;}
   }
-  @media (display-mode:standalone) {#fullscreen {display:none;}}
+  /* iPad の背の低い横画面向けにさらに上下の余白を節約。 */
+  @media (orientation:landscape) and (min-width:971px) and (max-height:740px) {
+    .shell {padding:5px 10px;}
+    .frame {padding:10px 18px;}
+    .toolbar {margin-bottom:8px;padding-bottom:7px;}
+    .calendars {gap:7px;}
+    .month-title {margin-bottom:4px;}
+    .day {min-height:17px;}
+    .date {margin:7px 0 12px;}
+    .time {font-size:clamp(92px,11.6vw,146px);}
+  }
   @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;}}
   @media print{body{background:white}.shell{padding:0}.frame{width:100%;box-shadow:none;border:0}.controls{display:none}}
 </style>
@@ -123,7 +166,7 @@
   <header class="toolbar"><div class="brand">DAYFRAME / LIVE DESK CLOCK</div><div class="controls">
     <label for="city" style="font-size:11px;color:var(--muted)">天気</label>
     <select id="city" aria-label="天気の地域"><option value="hiratsuka">平塚</option><option value="yokohama">横浜</option><option value="tokyo">東京</option><option value="osaka">大阪</option><option value="sapporo">札幌</option><option value="fukuoka">福岡</option></select>
-    <button id="mode" title="背景色切替">◐ 配色</button><button id="hours" title="12時間/24時間切替">24H</button><button id="fullscreen" title="全画面表示">⛶ 全画面</button>
+    <button id="mode" title="配色の切替：自動／昼／夜" aria-label="配色モード切替">◐ 自動</button><button id="hours" title="12時間/24時間切替">24H</button><button id="fullscreen" title="全画面表示">⛶ 全画面</button>
   </div></header>
   <div class="grid">
     <section class="clock-area">
@@ -155,8 +198,27 @@
   let chosenCity=safeStorage('dayframe-city-v1','hiratsuka'); if(!LOCATIONS[chosenCity])chosenCity='hiratsuka';
   $('city').value=chosenCity;
   let is12=safeStorage('dayframe-12h-v1',false);
-  let dark=safeStorage('dayframe-dark-v1',false);
-  document.body.classList.toggle('dark',dark); $('hours').textContent=is12?'12H':'24H';
+  // 配色: 自動（19:00〜翌6:00に夜モード）、昼固定、夜固定。
+  const THEMES=['auto','day','night'];
+  let themeMode=safeStorage('dayframe-theme-v2','auto');
+  if(!THEMES.includes(themeMode))themeMode='auto';
+  const themeNames={auto:'◐ 自動',day:'☼ 昼',night:'☾ 夜'};
+  let appliedTheme='';
+  function applyTheme(now=new Date()) {
+    const hour=now.getHours();
+    const night=themeMode==='night' || (themeMode==='auto' && (hour>=19 || hour<6));
+    const next=night?'night':'day';
+    if(next!==appliedTheme){
+      appliedTheme=next;
+      document.body.classList.toggle('ambient',night);
+      document.body.classList.remove('dark');
+      $('theme-color').content=night?'#100f0e':'#e9e9e7';
+    }
+    $('mode').textContent=themeNames[themeMode];
+    $('mode').title=`配色：${themeMode==='auto'?'自動（19時〜6時は夜間表示）':themeMode==='day'?'昼固定':'夜固定'}。クリックで切替`;
+    $('mode').setAttribute('aria-pressed', String(themeMode!=='auto'));
+  }
+  applyTheme(); $('hours').textContent=is12?'12H':'24H';
   let lastDay='';
   function fitClock(){
     const el=$('clock');
@@ -166,8 +228,11 @@
     if(required>available && available>0) el.style.transform=`scaleX(${(available/required).toFixed(4)})`;
   }
   window.addEventListener('resize',fitClock);
+  window.addEventListener('orientationchange',()=>requestAnimationFrame(fitClock));
+  if(document.fonts?.ready)document.fonts.ready.then(fitClock);
   function updateClock(){
     const now=new Date();
+    applyTheme(now);
     const h=is12?(now.getHours()%12||12):now.getHours();
     $('clock').textContent=`${String(h).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
     fitClock();
@@ -266,14 +331,31 @@
   $('ev-delete').addEventListener('click',()=>{if(editing && confirm('この予定を削除しますか？')){events=events.filter(e=>e.id!==editing);save('dayframe-events-v1',events);$('event-dialog').close();renderEvents();renderCalendars();}});
   $('event-form').addEventListener('submit',e=>{e.preventDefault();const item={id:editing??(typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()),title:$('ev-title').value.trim(),date:$('ev-date').value,time:$('ev-time').value};if(!item.title)return;if(editing)events=events.map(x=>x.id===editing?item:x);else events.push(item);save('dayframe-events-v1',events);$('event-dialog').close();renderEvents();renderCalendars();});
   $('hours').addEventListener('click',()=>{is12=!is12;save('dayframe-12h-v1',is12);$('hours').textContent=is12?'12H':'24H';updateClock();});
-  $('mode').addEventListener('click',()=>{dark=!dark;save('dayframe-dark-v1',dark);document.body.classList.toggle('dark',dark);});
-  // iPad/iOS Safari は通常の Fullscreen API をサポートしないため、押せないボタンを隠す。
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-  const standalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
-  if(isIOS || standalone || !document.documentElement.requestFullscreen) $('fullscreen').hidden=true;
-  $('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch(e){alert('このブラウザでは全画面表示を使用できません。ホーム画面に追加してWebアプリとして起動してください。');}});
-  // hidden属性がCSSのボタン表示指定に上書きされないようにする。
-  $('fullscreen').style.display=$('fullscreen').hidden?'none':'';
+  $('mode').addEventListener('click',()=>{
+    themeMode=THEMES[(THEMES.indexOf(themeMode)+1)%THEMES.length];
+    save('dayframe-theme-v2',themeMode);
+    applyTheme();
+  });
+  // iPadOS Safari / ホーム画面 Web アプリは Fullscreen API をサポートしない。
+  // 非対応環境では使えないボタンを消し、アラートを発生させない。
+  const fullButton=$('fullscreen');
+  const standalone=window.navigator.standalone===true || window.matchMedia('(display-mode: standalone)').matches;
+  const supportsFullscreen=typeof document.documentElement.requestFullscreen==='function';
+  if(!supportsFullscreen || standalone){
+    fullButton.hidden=true;
+    fullButton.style.display='none';
+  }else{
+    fullButton.addEventListener('click',async()=>{
+      try{
+        if(document.fullscreenElement) await document.exitFullscreen();
+        else await document.documentElement.requestFullscreen();
+      }catch(e){
+        // 権限やブラウザ制限で使えなければ以後ボタンを隠す。
+        fullButton.hidden=true;
+        fullButton.style.display='none';
+      }
+    });
+  }
   // 天気アイコンはHTMLと同階層の asset/ フォルダに配置してください。
   // 必要な10種類のSVG：
   // clear-day, clear-night, partly-cloudy-day, partly-cloudy-night,
