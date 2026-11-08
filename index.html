@@ -57,6 +57,9 @@
   .weather-foot {margin-top:12px;color:#858585;font-size:10px;line-height:1.4;}
   .calendars {display:flex;flex-direction:column;gap:18px;border-left:1px solid #b9b9b9;padding-left:27px;}
   .calendar-month {width:100%;}
+  /* 今月は細いアクセントラインと少し強めの見出しで控えめに強調。 */
+  .calendar-month.current-month {border-left:2px solid var(--accent);padding-left:9px;margin-left:-11px;}
+  .calendar-month.current-month .month-title {font-weight:500;}
   .month-title {font-family:"Helvetica Neue", Arial,sans-serif;font-size:19px;font-weight:300;letter-spacing:.025em;margin-bottom:10px;}
   .mini-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px 3px;text-align:center;}
   .weekday {font-size:10px;letter-spacing:.04em;color:#777;margin-bottom:3px;}
@@ -117,7 +120,7 @@
     body, .frame, .toolbar, .calendars, .controls button, .controls select,
     .event, .empty, .day.today, .forecast-day, .panel-label {transition:none;}
   }
-  @media (max-width:970px) { .frame{min-height:0;padding:20px;} .grid{grid-template-columns:1fr;} .time{font-size:clamp(63px,12vw,134px);} .calendars{border-left:0;border-top:1px solid #aaa;padding-left:0;padding-top:19px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;} .month-title{font-size:16px;} }
+  @media (max-width:970px) { .frame{min-height:0;padding:20px;} .grid{grid-template-columns:1fr;} .time{font-size:clamp(63px,12vw,134px);} .calendars{border-left:0;border-top:1px solid #aaa;padding-left:0;padding-top:19px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;} .month-title{font-size:16px;} }
   @media (max-width:570px) {.shell{padding:8px;}.frame{padding:14px;}.time{font-size:clamp(42px,11vw,72px);}.date{font-size:14px;margin-top:11px;}.under{grid-template-columns:1fr;}.schedule{min-height:0;}.calendars{grid-template-columns:1fr;}.mini-grid{max-width:390px;}.day{min-height:25px;} .month-title{margin-top:4px;}.toolbar{margin-bottom:16px;} }
   /* iPad 横向き: 画面領域に固定し、予定リストのみ独立スクロール。 */
   @media (orientation:landscape) and (min-width:971px) {
@@ -143,10 +146,10 @@
     .forecast-day .sym {height:30px;margin:3px 0;}
     .forecast-day .sym img {width:29px;height:29px;}
     .weather-foot {margin-top:7px;}
-    .calendars {min-height:0; gap:10px; padding-left:19px;}
-    .month-title {font-size:17px; margin-bottom:6px;}
-    .mini-grid {gap:2px 3px;}
-    .day {min-height:19px;font-size:11px;}
+    .calendars {min-height:0; gap:clamp(5px,1.1vh,12px); padding-left:19px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin;}
+    .month-title {font-size:clamp(14px,1.5vw,17px); margin-bottom:4px;}
+    .mini-grid {gap:1px 3px;}
+    .day {min-height:clamp(15px,2.05vh,19px);font-size:11px;}
     .weekday {font-size:9px; margin-bottom:1px;}
   }
   /* iPad の背の低い横画面向けにさらに上下の余白を節約。 */
@@ -154,9 +157,9 @@
     .shell {padding:5px 10px;}
     .frame {padding:10px 18px;}
     .toolbar {margin-bottom:8px;padding-bottom:7px;}
-    .calendars {gap:7px;}
+    .calendars {gap:4px;}
     .month-title {margin-bottom:4px;}
-    .day {min-height:17px;}
+    .day {min-height:15px;font-size:10px;}
     .date {margin:7px 0 12px;}
     .time {font-size:clamp(92px,11.6vw,146px);}
   }
@@ -180,7 +183,7 @@
         <section class="weather"><div class="panel-label">WEATHER / 天気</div><div class="weather-main"><span class="weather-symbol" id="weather-symbol"><span class="icon-fallback">—</span></span><span class="temp" id="temp">--</span><span class="temp-unit">°C</span></div><div class="weather-note" id="weather-note">天気情報を取得しています…</div><div class="forecast" id="forecast"></div><div class="weather-foot" id="weather-foot">天気: Open-Meteo（オンライン時のみ）</div></section>
       </div>
     </section>
-    <aside class="calendars" id="calendars" aria-label="3か月のカレンダー"></aside>
+    <aside class="calendars" id="calendars" aria-label="先月から再来月までの4か月カレンダー"></aside>
   </div>
 </section></main>
 <div id="holiday-tooltip" class="holiday-tooltip" role="status" hidden></div>
@@ -296,7 +299,7 @@
   $('calendars').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('holiday')){e.preventDefault();showHolidayTooltip(e.target);}});
   function renderCalendars(){
     const now=new Date(); const used=new Set(events.map(e=>e.date)); let html='';
-    for(let offset=0;offset<3;offset++){
+    for(let offset=-1;offset<=2;offset++){
       const first=new Date(now.getFullYear(),now.getMonth()+offset,1);
       const year=first.getFullYear(), month=first.getMonth();
       const start=first.getDay(), length=new Date(year,month+1,0).getDate();
@@ -311,7 +314,7 @@
           ? `<div tabindex="0" role="button" class="day holiday ${today?'today':''} ${used.has(key)?'has-event':''}" data-holiday="${esc(holiday)}" title="${esc(holiday)}" aria-label="${month+1}月${n}日 ${esc(holiday)}" ${today?'aria-current="date"':''}>${n}</div>`
           : `<div class="day ${today?'today':''} ${used.has(key)?'has-event':''}" ${today?'aria-current="date"':''}>${n}</div>`;
       }
-      html+=`<div class="calendar-month"><div class="month-title">${enMonths[month]} ${year}</div><div class="mini-grid">${days}</div></div>`;
+      html+=`<div class="calendar-month ${offset===0?'current-month':''}"><div class="month-title">${enMonths[month]} ${year}</div><div class="mini-grid">${days}</div></div>`;
     }
     $('calendars').innerHTML=html;
   }
