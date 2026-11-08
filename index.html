@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="DAYFRAME" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#e9e9e7" id="theme-color" />
-<title>DAYFRAME v12 — オンライン時計</title>
+<title>DAYFRAME v13 — オンライン時計</title>
 <style>
   :root { --ink:#262626; --muted:#777; --line:#b8b8b8; --paper:#ededeb; --soft:#d9d9d7; --accent:#353535; }
   * { box-sizing:border-box; }
@@ -126,7 +126,8 @@
     .toolbar {flex:0 0 auto; padding-bottom:10px; margin-bottom:12px;}
     .grid {flex:1 1 auto; min-height:0; grid-template-columns:minmax(0,1.75fr) minmax(280px,.93fr); gap:23px;}
     .clock-area {display:flex; flex-direction:column; min-height:0; overflow:hidden;}
-    .time {font-size:clamp(96px,12.3vw,164px); text-align:left; transform-origin:left center; letter-spacing:0.005em;}
+    /* v13: 時計を約15%拡大。横幅を超える場合は既存の fitClock() で収める。 */
+    .time {font-size:clamp(110px,14.15vw,189px); text-align:left; transform-origin:left center; letter-spacing:0.005em;}
     .date {margin:10px 0 17px; font-size:clamp(15px,1.5vw,20px);}
     .under {flex:1 1 auto; min-height:0; grid-template-columns:minmax(0,1fr) minmax(176px,.88fr); gap:14px;}
     .schedule {min-height:0; min-width:0; display:flex; flex-direction:column; overflow:hidden;}
@@ -160,7 +161,7 @@
     .mini-grid {gap:2px 3px;}
     .day {min-height:16px;font-size:10px;}
     .date {margin:7px 0 12px;}
-    .time {font-size:clamp(92px,11.6vw,146px);}
+    .time {font-size:clamp(105px,13.3vw,167px);}
   }
   @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;}}
   @media print{body{background:white}.shell{height:auto;min-height:0;padding:0;overflow:visible}.frame{width:100%;height:auto;min-height:0;display:block;overflow:visible;box-shadow:none;border:0}.grid{display:grid}.clock-area{display:block;overflow:visible}.under{display:grid}.event-list{overflow:visible}.controls{display:none}}
