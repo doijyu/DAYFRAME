@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="DAYFRAME" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#e9e9e7" id="theme-color" />
-<title>DAYFRAME v11 — オンライン時計</title>
+<title>DAYFRAME v12 — オンライン時計</title>
 <style>
   :root { --ink:#262626; --muted:#777; --line:#b8b8b8; --paper:#ededeb; --soft:#d9d9d7; --accent:#353535; }
   * { box-sizing:border-box; }
@@ -57,8 +57,7 @@
   .weather-foot {margin-top:12px;color:#858585;font-size:10px;line-height:1.4;}
   .calendars {display:flex;flex-direction:column;gap:18px;border-left:1px solid #b9b9b9;padding-left:27px;}
   .calendar-month {width:100%;}
-  /* 今月は細いアクセントラインと少し強めの見出しで控えめに強調。 */
-    .month-title {font-family:"Helvetica Neue", Arial,sans-serif;font-size:19px;font-weight:300;letter-spacing:.025em;margin-bottom:10px;}
+  .month-title {font-family:"Helvetica Neue", Arial,sans-serif;font-size:19px;font-weight:300;letter-spacing:.025em;margin-bottom:10px;}
   .mini-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px 3px;text-align:center;}
   .weekday {font-size:10px;letter-spacing:.04em;color:#777;margin-bottom:3px;}
   .day {min-height:22px;display:grid;place-items:center;font-size:12px;font-variant-numeric:tabular-nums;border-radius:1px;}
@@ -165,6 +164,68 @@
   }
   @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;}}
   @media print{body{background:white}.shell{height:auto;min-height:0;padding:0;overflow:visible}.frame{width:100%;height:auto;min-height:0;display:block;overflow:visible;box-shadow:none;border:0}.grid{display:grid}.clock-area{display:block;overflow:visible}.under{display:grid}.event-list{overflow:visible}.controls{display:none}}
+
+  /* DAYFRAME AUDIO / 時計の外観を保つ、控えめなフローティング操作パネル。 */
+  #audio-toggle {position:relative;white-space:nowrap;}
+  #audio-toggle.audio-playing::after {content:"";width:5px;height:5px;border-radius:50%;background:#5a8a60;display:inline-block;margin-left:6px;vertical-align:middle;}
+  .audio-panel[hidden], .audio-panel [hidden] {display:none !important;}
+  .audio-panel {--apaper:#f3f3f1;--aink:#303030;--amuted:#72716f;--aline:#c9c9c6;--abutton:#e4e4e1;
+    position:absolute;right:19px;top:55px;z-index:25;width:min(400px,calc(100% - 24px));
+    max-height:calc(100% - 68px);overflow-y:auto;overscroll-behavior:contain;
+    background:var(--apaper);color:var(--aink);border:1px solid #aaa9a5;
+    box-shadow:0 16px 36px #0003;padding:19px 19px 15px;font-size:12px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+  .audio-head {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+  .audio-kicker {font-size:10px;letter-spacing:.20em;font-weight:650;color:var(--amuted);}
+  .audio-head button {font-size:20px;line-height:1;border:0;background:none;color:var(--aink);padding:3px 7px;}
+  .audio-tabs {display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:14px;}
+  .audio-tabs button {border:1px solid var(--aline);color:var(--amuted);background:transparent;padding:9px 5px;font-size:11px;letter-spacing:.13em;}
+  .audio-tabs button[aria-selected="true"] {background:var(--aink);border-color:var(--aink);color:var(--apaper);}
+  .audio-filters {display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;}
+  .audio-input,.audio-select {width:100%;min-width:0;border:1px solid var(--aline);background:transparent;color:var(--aink);padding:9px 10px;border-radius:0;font-size:12px;}
+  .audio-label {display:block;margin:0 0 6px;font-size:10px;letter-spacing:.14em;color:var(--amuted);}
+  .audio-sources {display:flex;flex-direction:column;gap:9px;}
+  .audio-tools {display:flex;align-items:center;gap:7px;margin:10px 0 6px;}
+  .audio-fav-filter {margin-right:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--amuted);user-select:none;}
+  .audio-fav-filter input {accent-color:var(--aink);}
+  .audio-smallbtn {border:1px solid var(--aline);background:transparent;color:var(--aink);font-size:11px;padding:6px 10px;min-height:30px;}
+  .audio-results {margin:4px 0 10px;max-height:173px;overflow-y:auto;border-top:1px solid var(--aline);border-bottom:1px solid var(--aline);overscroll-behavior:contain;}
+  .audio-choice {width:100%;border:0;border-bottom:1px solid var(--aline);padding:10px 5px;background:transparent;color:var(--aink);display:flex;text-align:left;align-items:center;gap:9px;cursor:pointer;}
+  .audio-choice:last-child {border-bottom:0;}
+  .audio-choice:hover,.audio-choice.is-current {background:var(--abutton);}
+  .audio-choice:focus-visible,.audio-smallbtn:focus-visible {outline:2px solid var(--aink);outline-offset:-2px;}
+  .audio-item-mark {font-size:13px;min-width:17px;text-align:center;opacity:.65;}
+  .audio-item-detail {display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+  .audio-item-title {font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .audio-item-sub {font-size:10px;color:var(--amuted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .audio-item-fav {font-size:15px;opacity:.75;}
+  .audio-empty {padding:13px 3px;color:var(--amuted);font-size:11px;line-height:1.6;}
+  .audio-now {border-top:1px solid var(--aline);margin-top:7px;padding-top:13px;display:flex;gap:10px;align-items:center;}
+  .audio-now-symbol {flex:0 0 39px;height:39px;background:var(--abutton);display:grid;place-items:center;color:var(--aink);font-size:19px;}
+  .audio-now-meta {min-width:0;flex:1;}
+  .audio-now-title {font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .audio-now-by {color:var(--amuted);font-size:11px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .audio-iconbtn {border:1px solid var(--aline);background:transparent;color:var(--aink);height:32px;min-width:35px;padding:4px 6px;font-size:18px;line-height:1;}
+  .audio-iconbtn:disabled {opacity:.3;cursor:not-allowed;}
+  .audio-controls {display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 8px;}
+  .audio-mainbtn {border:1px solid var(--aink);background:var(--aink);color:var(--apaper);min-width:99px;padding:9px 12px;min-height:37px;font-size:12px;}
+  .audio-volume {display:flex;align-items:center;gap:11px;color:var(--amuted);font-size:11px;margin:8px 0 12px;}
+  .audio-volume input {flex:1;accent-color:var(--aink);min-width:30px;}
+  .audio-footer {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--aline);padding-top:11px;color:var(--amuted);font-size:10px;}
+  .audio-panel a {color:var(--aink);text-decoration:underline;text-decoration-color:var(--aline);text-underline-offset:3px;}
+  .audio-message {min-height:15px;color:var(--amuted);font-size:11px;line-height:1.55;margin:7px 0 0;}
+  .audio-message.error {color:#9e513e;}
+  .audio-japan {padding:13px 10px;background:var(--abutton);line-height:1.75;}
+  .audio-japan strong {font-size:12px;font-weight:500;}
+  .audio-japan p {font-size:11px;margin:5px 0 9px;color:var(--amuted);}
+  .audio-japan a {display:inline-block;font-size:12px;padding:4px 0;}
+  .audio-notice {font-size:10px;line-height:1.5;color:var(--amuted);margin:10px 0;}
+  body.ambient .audio-panel {--apaper:#211c18;--aink:#e0ba94;--amuted:#a28c77;--aline:#544638;--abutton:#302721;border-color:#51453b;box-shadow:0 14px 32px #0006;}
+  body.ambient #audio-toggle.audio-playing::after {background:#bba174;}
+  body.ambient .audio-message.error {color:#e1a087;}
+  @media(max-width:970px) {.audio-panel{top:68px;right:10px;max-height:min(80vh,620px);}}
+  @media(max-width:570px) {.audio-panel{top:72px;right:7px;width:calc(100% - 14px);padding:14px;max-height:calc(100dvh - 90px);}}
+  @media print {.audio-panel{display:none !important;}}
 </style>
 </head>
 <body>
@@ -172,7 +233,7 @@
   <header class="toolbar"><div class="brand">DAYFRAME / LIVE DESK CLOCK</div><div class="controls">
     <label for="city" style="font-size:11px;color:var(--muted)">天気</label>
     <select id="city" aria-label="天気の地域"><option value="hiratsuka">平塚</option><option value="yokohama">横浜</option><option value="tokyo">東京</option><option value="osaka">大阪</option><option value="sapporo">札幌</option><option value="fukuoka">福岡</option><option value="kitakyushu">北九州</option></select>
-    <button id="mode" title="配色の切替：自動／昼／夜" aria-label="配色モード切替">◐ 自動</button><button id="hours" title="12時間/24時間切替">24H</button><button id="fullscreen" title="全画面表示">⛶ 全画面</button>
+    <button id="mode" title="配色の切替：自動／昼／夜" aria-label="配色モード切替">◐ 自動</button><button id="hours" title="12時間/24時間切替">24H</button><button id="audio-toggle" title="BGM・ラジオ" aria-controls="audio-panel" aria-expanded="false">♫ AUDIO</button><button id="fullscreen" title="全画面表示">⛶ 全画面</button>
   </div></header>
   <div class="grid">
     <section class="clock-area">
@@ -185,7 +246,49 @@
     </section>
     <aside class="calendars" id="calendars" aria-label="先月から再来月までの4か月カレンダー"></aside>
   </div>
+
+  <aside id="audio-panel" class="audio-panel" hidden aria-label="DAYFRAME AUDIO 操作パネル">
+    <div class="audio-head"><div class="audio-kicker">DAYFRAME / AUDIO</div><button id="audio-close" type="button" aria-label="AUDIOを閉じる">×</button></div>
+    <div class="audio-tabs" role="tablist" aria-label="音源を選択">
+      <button id="audio-tab-bgm" type="button" role="tab" aria-selected="true" aria-controls="audio-bgm">BGM · AUDIUS</button>
+      <button id="audio-tab-radio" type="button" role="tab" aria-selected="false" aria-controls="audio-radio">WORLD RADIO</button>
+    </div>
+    <section id="audio-bgm" class="audio-section" role="tabpanel" aria-labelledby="audio-tab-bgm">
+      <div class="audio-sources"><label><span class="audio-label">MOOD / ジャンル</span>
+        <select id="audio-bgm-genre" class="audio-select"><option value="ambient">Ambient</option><option value="lofi">Lo-Fi</option><option value="jazz">Jazz</option><option value="piano">Piano</option><option value="chill">Chill</option></select></label>
+        <label><span class="audio-label">SEARCH / 楽曲検索（任意）</span><input id="audio-bgm-query" class="audio-input" type="search" placeholder="アーティスト・曲名・キーワード" maxlength="60" autocomplete="off"></label></div>
+    </section>
+    <section id="audio-radio" class="audio-section" role="tabpanel" aria-labelledby="audio-tab-radio" hidden>
+      <div class="audio-sources">
+        <label><span class="audio-label">RADIO TYPE / 放送局</span><select id="audio-radio-type" class="audio-select"><option value="world">インターネットラジオ</option><option value="japan">日本のFM（radiko公式）</option></select></label>
+        <div id="audio-world-radio" class="audio-sources">
+          <label><span class="audio-label">GENRE</span><select id="audio-radio-genre" class="audio-select"><option value="jazz">Jazz</option><option value="ambient">Ambient</option><option value="chillout">Chillout</option><option value="classical">Classical</option><option value="talk">Talk</option><option value="">指定なし</option></select></label>
+          <label><span class="audio-label">COUNTRY</span><select id="audio-radio-country" class="audio-select"><option value="">すべて</option><option value="JP">Japan</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="FR">France</option><option value="DE">Germany</option></select></label>
+          <label><span class="audio-label">SEARCH / 局名検索（任意）</span><input id="audio-radio-query" class="audio-input" type="search" maxlength="60" placeholder="Station name" autocomplete="off"></label>
+        </div>
+        <div id="audio-japan-radio" class="audio-japan" hidden>
+          <strong>国内FMは公式サービスで再生</strong>
+          <p>FMヨコハマ、TOKYO FMなどはradikoで。放送の音声をDAYFRAME内に無断で組み込むことはしません。</p>
+          <a href="https://radiko.jp/" target="_blank" rel="noopener noreferrer">radikoを開く ↗</a>
+        </div>
+      </div>
+    </section>
+    <div id="audio-tools" class="audio-tools"><label class="audio-fav-filter"><input id="audio-favorites-only" type="checkbox"> お気に入りだけ</label><button type="button" id="audio-search" class="audio-smallbtn">検索 / 更新</button></div>
+    <div id="audio-results" class="audio-results" aria-label="音楽・放送局の検索結果"></div>
+    <div id="audio-empty" class="audio-empty" hidden></div>
+    <div class="audio-now">
+      <div id="audio-now-symbol" class="audio-now-symbol" aria-hidden="true">♫</div>
+      <div class="audio-now-meta"><div id="audio-now-title" class="audio-now-title">未選択</div><div id="audio-now-by" class="audio-now-by">聴きたい曲・局をタップ</div></div>
+      <button id="audio-favorite" class="audio-iconbtn" type="button" title="お気に入りに登録" aria-label="お気に入りに登録" disabled>♡</button>
+    </div>
+    <div class="audio-controls"><button id="audio-prev" class="audio-iconbtn" type="button" aria-label="前の曲" title="前の曲" disabled>‹</button><button id="audio-play" class="audio-mainbtn" type="button" aria-label="再生・一時停止">▶ 再生</button><button id="audio-next" class="audio-iconbtn" type="button" aria-label="次の曲" title="次の曲" disabled>›</button></div>
+    <label class="audio-volume"><span>VOL</span><input id="audio-volume" type="range" min="0" max="100" step="5" value="35" aria-label="音量"><span id="audio-volume-label">35%</span></label>
+    <div id="audio-message" class="audio-message" role="status" aria-live="polite">楽曲・放送局を選ぶと再生できます。</div>
+    <div class="audio-footer"><span id="audio-provider">Powered by Audius</span><a id="audio-source-link" href="https://audius.co/" target="_blank" rel="noopener noreferrer">提供元を開く ↗</a></div>
+    <div class="audio-notice">外部サービスへの接続が必要です。局ごとの権利・配信条件を尊重し、音源は保存しません。iPadでは最初の再生にタップが必要です。</div>
+  </aside>
 </section></main>
+<audio id="dayframe-audio" preload="none" playsinline></audio>
 <div id="holiday-tooltip" class="holiday-tooltip" role="status" hidden></div>
 <dialog id="event-dialog"><form id="event-form"><h2 id="event-heading">予定を追加</h2><label>タイトル<input id="ev-title" required maxlength="80" placeholder="例：ランチ、打ち合わせ" /></label><label>日付<input id="ev-date" type="date" required /></label><label>時刻<input id="ev-time" type="time" required /></label><div class="actions"><button type="button" class="danger" id="ev-delete" hidden>削除</button><button type="button" id="ev-cancel">キャンセル</button><button type="submit" class="primary">保存</button></div></form></dialog>
 <script>
@@ -407,6 +510,235 @@
   }
   $('city').addEventListener('change',e=>{chosenCity=e.target.value;save('dayframe-city-v1',chosenCity);fetchWeather();});
   updateClock();setInterval(updateClock,1000);setInterval(fetchWeather,15*60*1000);
+})();
+</script>
+
+<script>
+(() => {
+  'use strict';
+  // DAYFRAME AUDIO: 音声を保存しない。APIトークン・秘密鍵も同梱しない。
+  const $=id=>document.getElementById(id), player=$('dayframe-audio');
+  const AUDIUS_BASE='https://api.audius.co/v1';
+  const RADIO_HOSTS=['https://de1.api.radio-browser.info','https://fi1.api.radio-browser.info','https://nl1.api.radio-browser.info'];
+  const RADIKO='https://radiko.jp/';
+  const genres={ambient:'ambient',lofi:'lofi',jazz:'jazz',piano:'piano',chill:'chill'};
+  const remember=(key,val)=>{try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}};
+  const recall=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback;}catch(e){return fallback;}};
+  const el={panel:$('audio-panel'),toggle:$('audio-toggle'),play:$('audio-play'),results:$('audio-results'),empty:$('audio-empty'),msg:$('audio-message'),now:$('audio-now-title'),by:$('audio-now-by'),fav:$('audio-favorite')};
+  let tab='bgm',list=[],bgmQueue=[],selected=null,selectedIndex=-1,loading=false,requestId=0,transitionNumber=0;
+  let favorites=recall('dayframe-audio-favorites-v1',[]);
+  if(!Array.isArray(favorites))favorites=[];
+  favorites=favorites.filter(f=>f&&typeof f.id==='string'&&['bgm','radio'].includes(f.kind)).slice(0,100);
+  const savedVolume=recall('dayframe-audio-volume-v1',35);
+  player.volume=Math.max(0,Math.min(1,(Number(savedVolume)||0)/100));
+  $('audio-volume').value=Math.round(player.volume*100);
+  $('audio-volume-label').textContent=Math.round(player.volume*100)+'%';
+  const safeText=(s)=>String(s==null?'':s);
+  const secureUrl=(u)=>{try{const x=new URL(u);return x.protocol==='https:'?x.href:'';}catch(e){return '';}};
+  const trackUrl=t=>{
+    if(!t)return 'https://audius.co/';
+    const p=safeText(t.permalink||'');
+    if(p.startsWith('/'))return 'https://audius.co'+p;
+    if(p.startsWith('https://audius.co/'))return p;
+    return 'https://audius.co/';
+  };
+  const radioSite=item=>secureUrl(item?.homepage)||'https://www.radio-browser.info/';
+  const getKey=item=>item?.kind+':'+item?.id;
+  const isFavorite=item=>!!item&&favorites.some(f=>getKey(f)===getKey(item));
+  function showMessage(str,isError=false){el.msg.textContent=str;el.msg.classList.toggle('error',isError);}
+  function setPanel(open){el.panel.hidden=!open;el.toggle.setAttribute('aria-expanded',String(open));if(open&&!list.length&&!loading)loadList();}
+  el.toggle.addEventListener('click',()=>setPanel(el.panel.hidden));
+  $('audio-close').addEventListener('click',()=>setPanel(false));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!el.panel.hidden){setPanel(false);el.toggle.focus();}});
+  document.addEventListener('pointerdown',e=>{if(!el.panel.hidden&&!el.panel.contains(e.target)&&!el.toggle.contains(e.target))setPanel(false);});
+  function setTab(next){
+    if(next===tab)return;
+    tab=next;requestId++;list=[];$('audio-favorites-only').checked=false;
+    $('audio-tab-bgm').setAttribute('aria-selected',String(tab==='bgm'));
+    $('audio-tab-radio').setAttribute('aria-selected',String(tab==='radio'));
+    $('audio-bgm').hidden=tab!=='bgm';$('audio-radio').hidden=tab!=='radio';
+    $('audio-provider').textContent=tab==='bgm'?'Powered by Audius':'Stations: Radio Browser';
+    if(!selected){$('audio-source-link').href=tab==='bgm'?'https://audius.co/':'https://www.radio-browser.info/';}
+    updateRadioType();loadList();
+  }
+  $('audio-tab-bgm').addEventListener('click',()=>setTab('bgm'));
+  $('audio-tab-radio').addEventListener('click',()=>setTab('radio'));
+  $('audio-radio-type').addEventListener('change',()=>{requestId++;updateRadioType();loadList();});
+  function updateRadioType(){
+    const japan=tab==='radio'&&$('audio-radio-type').value==='japan';
+    $('audio-world-radio').hidden=japan;$('audio-japan-radio').hidden=!japan;
+    $('audio-tools').hidden=japan;el.results.hidden=japan;
+    if(japan){el.empty.hidden=true;el.msg.textContent='国内FMはradiko公式サイトから聴けます。';}
+  }
+  const currentFavorites=()=>favorites.filter(x=>x.kind===tab);
+  function renderList(){
+    const items=$('audio-favorites-only').checked?currentFavorites():list;
+    el.results.replaceChildren();el.empty.hidden=!!items.length;
+    if(!items.length){el.empty.textContent=$('audio-favorites-only').checked?'まだお気に入りがありません。':'結果がありません。検索条件を変えてください。';return;}
+    for(let i=0;i<items.length;i++){
+      const item=items[i];const btn=document.createElement('button');btn.type='button';
+      btn.className='audio-choice'+(selected&&getKey(item)===getKey(selected)?' is-current':'');
+      const mark=document.createElement('span');mark.className='audio-item-mark';mark.textContent=item.kind==='bgm'?'♫':'◉';
+      const detail=document.createElement('span');detail.className='audio-item-detail';
+      const title=document.createElement('span');title.className='audio-item-title';title.textContent=item.title;
+      const sub=document.createElement('span');sub.className='audio-item-sub';sub.textContent=item.by;
+      const fav=document.createElement('span');fav.className='audio-item-fav';fav.textContent=isFavorite(item)?'♥':'';
+      detail.append(title,sub);btn.append(mark,detail,fav);
+      btn.title=item.title+'を再生';
+      btn.addEventListener('click',()=>{selectedIndex=list.findIndex(x=>getKey(x)===getKey(item));selectAndPlay(item);});
+      el.results.appendChild(btn);
+    }
+  }
+  function updatePlayer(){
+    const isPlaying=!player.paused&&!player.ended&&!!player.currentSrc;
+    el.toggle.classList.toggle('audio-playing',isPlaying);
+    el.play.textContent=isPlaying?'Ⅱ 一時停止':'▶ 再生';
+    el.toggle.title=isPlaying?'再生中（AUDIOを開く）':'BGM・ラジオ';
+    if(selected){el.now.textContent=selected.title;el.by.textContent=selected.by;}
+    else{el.now.textContent='未選択';el.by.textContent='聴きたい曲・局をタップ';}
+    $('audio-now-symbol').textContent=selected?.kind==='radio'?'◉':'♫';
+    el.fav.disabled=!selected;el.fav.textContent=isFavorite(selected)?'♥':'♡';
+    el.fav.setAttribute('aria-label',isFavorite(selected)?'お気に入りから削除':'お気に入りに追加');
+    $('audio-prev').disabled=!selected||selected.kind!=='bgm'||bgmQueue.length<2;
+    $('audio-next').disabled=!selected||selected.kind!=='bgm'||bgmQueue.length<2;
+    const link=selected?(selected.kind==='bgm'?trackUrl(selected):radioSite(selected)):(tab==='bgm'?'https://audius.co/':'https://www.radio-browser.info/');
+    $('audio-source-link').href=link;
+    $('audio-source-link').textContent=selected?(selected.kind==='bgm'?'Audiusで楽曲を見る ↗':'放送局サイトを開く ↗'):'提供元を開く ↗';
+    $('audio-provider').textContent=selected?(selected.kind==='bgm'?'Audio by Audius':'Stations: Radio Browser'):(tab==='bgm'?'Powered by Audius':'Stations: Radio Browser');
+    renderList();
+  }
+  function selectAndPlay(item){
+    if(!item)return;
+    const source=item.kind==='bgm'?`${AUDIUS_BASE}/tracks/${encodeURIComponent(item.id)}/stream?app_name=DAYFRAME`:secureUrl(item.url);
+    if(!source){showMessage('この放送局はHTTPSで再生できません。別の局を選んでください。',true);return;}
+    if(item.kind==='bgm'&&!bgmQueue.some(x=>getKey(x)===getKey(item)))bgmQueue=[item,...bgmQueue];
+    selected=item;transitionNumber++;const thisStart=transitionNumber;
+    player.pause();player.removeAttribute('src');player.load();player.src=source;
+    showMessage('接続しています…');updatePlayer();
+    // ユーザーが曲・局を選んだクリックイベント内で直接呼ぶ（iPadOSの音声再生制限に対応）。
+    const attempt=player.play();
+    if(attempt&&typeof attempt.catch==='function')attempt.catch(()=>{
+      if(thisStart!==transitionNumber)return;
+      showMessage('再生できませんでした。音源の公開制限、回線、形式を確認し、別の曲・局を選んでください。',true);
+      updatePlayer();
+    });
+    if(item.kind==='radio')registerRadioClick(item.id);
+  }
+  function playOrPause(){
+    if(!selected){
+      if(!list.length){showMessage('先に検索結果から曲または放送局を選んでください。');return;}
+      selectedIndex=0;selectAndPlay(list[0]);return;
+    }
+    if(!player.paused){player.pause();return;}
+    const attempt=player.play();
+    if(attempt&&typeof attempt.catch==='function')attempt.catch(()=>showMessage('再生できません。もう一度、音源を選択してください。',true));
+  }
+  el.play.addEventListener('click',playOrPause);
+  function nextTrack(direction=1){
+    if(!selected||selected.kind!=='bgm'||bgmQueue.length<2)return;
+    let i=bgmQueue.findIndex(x=>getKey(x)===getKey(selected));
+    if(i===-1)i=selectedIndex;
+    i=(i+direction+bgmQueue.length)%bgmQueue.length;selectedIndex=i;selectAndPlay(bgmQueue[i]);
+  }
+  $('audio-next').addEventListener('click',()=>nextTrack(1));
+  $('audio-prev').addEventListener('click',()=>nextTrack(-1));
+  el.fav.addEventListener('click',()=>{
+    if(!selected)return;
+    const k=getKey(selected);
+    if(isFavorite(selected))favorites=favorites.filter(x=>getKey(x)!==k);
+    else favorites=[...favorites.filter(x=>getKey(x)!==k),selected].slice(-100);
+    remember('dayframe-audio-favorites-v1',favorites);updatePlayer();
+  });
+  $('audio-volume').addEventListener('input',e=>{
+    const n=Math.max(0,Math.min(100,Number(e.target.value)||0));player.volume=n/100;
+    $('audio-volume-label').textContent=n+'%';remember('dayframe-audio-volume-v1',n);
+  });
+  player.addEventListener('play',()=>{showMessage('再生中');updatePlayer();});
+  player.addEventListener('pause',()=>{if(!player.ended){showMessage('一時停止');updatePlayer();}});
+  player.addEventListener('waiting',()=>{if(selected)showMessage('読み込み中…');});
+  player.addEventListener('playing',()=>{showMessage('再生中');updatePlayer();});
+  player.addEventListener('error',()=>{
+    if(!selected)return;showMessage('ストリームを再生できません。配信制限・URL・音声形式をご確認ください。',true);updatePlayer();
+  });
+  player.addEventListener('ended',()=>{
+    if(selected?.kind==='bgm'&&bgmQueue.length>1){nextTrack(1);}else{showMessage('再生が終了しました。');updatePlayer();}
+  });
+  $('audio-search').addEventListener('click',()=>loadList());
+  $('audio-favorites-only').addEventListener('change',()=>{
+    if($('audio-favorites-only').checked){requestId++;loading=false;renderList();showMessage('お気に入りを表示しています。');}
+    else loadList();
+  });
+  for(const id of ['audio-bgm-genre','audio-radio-genre','audio-radio-country'])$(id).addEventListener('change',()=>{
+    if(!$('audio-favorites-only').checked)loadList();
+  });
+  for(const id of ['audio-bgm-query','audio-radio-query'])$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('audio-favorites-only').checked=false;loadList();}});
+  async function retrieveJson(url){
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),12000);
+    try{const r=await fetch(url,{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+      if(!r.ok)throw Error('HTTP '+r.status);return await r.json();
+    }finally{clearTimeout(to);}
+  }
+  const normalTrack=t=>{
+    if(!t||!t.id||t.is_streamable===false||t.is_stream_gated===true||t.is_available===false||t.is_unlisted===true||
+       (Array.isArray(t.allowed_api_keys)&&t.allowed_api_keys.length>0)||t.access?.stream===false)return null;
+    return {kind:'bgm',id:String(t.id),title:safeText(t.title||'Untitled'),by:safeText(t.user?.name||t.user?.handle||t.genre||'Audius'),permalink:safeText(t.permalink||'')};
+  };
+  const normalRadio=s=>{
+    const url=secureUrl(s?.url_resolved||s?.url);
+    if(!s||!s.stationuuid||!url||!(s.lastcheckok===true||s.lastcheckok===1))return null;
+    const codec=safeText(s.codec||'').toUpperCase();
+    // iPad Safariで扱いやすいMP3/AAC/HLS系を優先。未知の形式は除外する。
+    if(codec&&!['MP3','AAC','AAC+','HLS'].includes(codec))return null;
+    return {kind:'radio',id:String(s.stationuuid),title:safeText(s.name||'Unknown Station'),by:safeText(s.country||s.tags?.split(',')[0]||'Internet Radio'),url,homepage:safeText(s.homepage||'')};
+  };
+  async function getRadioStations(params){
+    const start=(Math.floor(Math.random()*RADIO_HOSTS.length));let lastErr;
+    for(let i=0;i<RADIO_HOSTS.length;i++){
+      const base=RADIO_HOSTS[(start+i)%RADIO_HOSTS.length];
+      try{return {stations:await retrieveJson(`${base}/json/stations/search?${params.toString()}`),base};}
+      catch(e){lastErr=e;}
+    }
+    throw lastErr||Error('radio unavailable');
+  }
+  let lastRadioBase=RADIO_HOSTS[0];
+  function registerRadioClick(uuid){
+    if(!/^[0-9a-f-]{16,}$/i.test(uuid))return;
+    // Radio Browserが推奨するクリック集計。再生自体には影響しない。
+    fetch(lastRadioBase+'/json/url/'+encodeURIComponent(uuid),{method:'GET',mode:'cors'}).catch(()=>{});
+  }
+  async function loadList(){
+    if(tab==='radio'&&$('audio-radio-type').value==='japan'){
+      el.results.replaceChildren();el.empty.hidden=true;showMessage('国内FMはradiko公式サイトから聴けます。');return;
+    }
+    if($('audio-favorites-only').checked){renderList();return;}
+    const token=++requestId;loading=true;el.results.replaceChildren();el.empty.hidden=false;el.empty.textContent='読み込み中…';showMessage('情報を取得しています…');
+    try{
+      let items=[];
+      if(tab==='bgm'){
+        const query=$('audio-bgm-query').value.trim()||genres[$('audio-bgm-genre').value]||'ambient';
+        const qs=new URLSearchParams({query,limit:'30',app_name:'DAYFRAME'});
+        const result=await retrieveJson(`${AUDIUS_BASE}/tracks/search?${qs.toString()}`);
+        if(!Array.isArray(result.data))throw Error('invalid response');
+        items=result.data.map(normalTrack).filter(Boolean).slice(0,16);
+      }else{
+        const params=new URLSearchParams({hidebroken:'true',order:'clickcount',reverse:'true',limit:'90'});
+        const tag=$('audio-radio-genre').value,country=$('audio-radio-country').value,name=$('audio-radio-query').value.trim();
+        if(tag)params.set('tag',tag);if(country)params.set('countrycode',country);if(name)params.set('name',name);
+        const result=await getRadioStations(params);lastRadioBase=result.base;
+        if(!Array.isArray(result.stations))throw Error('invalid radio response');
+        items=result.stations.map(normalRadio).filter(Boolean).slice(0,16);
+      }
+      if(token!==requestId)return;
+      list=items;if(tab==='bgm')bgmQueue=items;renderList();
+      showMessage(items.length?`候補 ${items.length} 件。タップして再生してください。`:'一致する再生可能な候補がありません。検索条件を変えてください。');
+    }catch(e){
+      if(token!==requestId)return;list=[];el.results.replaceChildren();el.empty.hidden=false;
+      el.empty.textContent='情報を取得できませんでした。ネット接続やサービスの提供状況をご確認ください。';
+      showMessage('取得に失敗しました。時間をおいて「検索 / 更新」を押してください。',true);
+    }finally{if(token===requestId)loading=false;}
+  }
+  // 自動で音声再生しない。AUDIOを開いた時だけ検索する。
+  updatePlayer();
 })();
 </script>
 </body></html>
